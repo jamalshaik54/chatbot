@@ -1,1 +1,172 @@
-yuktyugi
+# -*- coding: utf-8 -*-
+
+
+import winsound
+import pandas as pd
+import random
+import datetime
+from tkinter import *
+import urllib3
+import requests
+import os
+import time
+
+
+
+def response_bot(req):
+    input_req=req
+    #if(root.counter==0):
+    complete_data=pd.ExcelFile('C:\\Users\\kodanda.udumula\\Desktop\\ML\\QA.xlsx')
+    QA=pd.read_excel(complete_data,sheet_name='Sheet1')
+    QL=pd.read_excel(complete_data,sheet_name='Sheet2')
+    #response_bot(input_req)
+    possible_resp=[]
+    possible_links=[]
+    for ques in range(0,len(QL.Question)):
+        if(QL.Question[ques].lower()==input_req):
+            possible_links.append(QL.Link[ques].lower())
+    if(len(possible_links)>0):
+        act_ques=possible_links[0]
+    else:
+        act_ques=input_req
+    for request in range(0,len(QA.Request)):
+        if(QA.Request[request].lower()==act_ques):
+            possible_resp.append(QA.Response[request])
+    if(len(possible_resp)>0):
+        random_num = random.randint(0,len(possible_resp)-1)
+        if(act_ques=="what is the time?".lower()):
+            return possible_resp[random_num] + ret_time()
+        else:
+            return possible_resp[random_num]
+    else:
+        return "Interesting!!! I want to learn about this"
+def ret_time():
+    currentDT = datetime.datetime.now()
+    return str(currentDT)
+def print_user_typed():
+    def get_req_qtest():
+        bearer= "bearer "+str(bearer_entry.get())
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        url="https://kodanda.qtestnet.com/api/v3/projects/"+str(project_entry.get())+"/requirements?page=1&size=1000"
+        headers={'Authorization':bearer,'Cache-Control':'no-cache','content-type':'application/json','accept':'aaplication/json'}
+        get_req=requests.get(url,headers=headers,verify=False)
+        req_details=get_req.content.decode('utf-8')
+        json_req_obj=json.loads(req_details)
+        req_name_list=[]
+        for index1 in range(0,len(json_req_obj)):
+            req_name_list.append(json_req_obj[index1]['name'])
+        return req_name_list
+    def but_get_req():
+        message.config(state=NORMAL)
+        input_user.config(state=DISABLED)
+        message.insert("end", "Wall-E : Please wait while i fetch the requirements\n")
+        message.config(state=DISABLED)
+        req_list=get_req_qtest()
+        message.config(state=NORMAL)
+        message.insert("end", "Wall-E : Below are the requirements present in your project\n") 
+        for name in req_list:
+            message.insert("end", name + "\n")
+            message.see("end")
+        Qtest_details.destroy()
+        input_user.config(state=NORMAL)
+        
+    def cancel():
+        Qtest_details.destroy()
+        message.insert("end", "Wall-E : Action has been cancelled\n")
+        #message.tag_add("here", "1.0", "end")
+        #message.tag_config("here", foreground="green")
+        message.insert("end", "Wall-E : How can i help you?\n")
+        message.see("end")
+        input_user.config(state=NORMAL)
+    data=input_user.get("1.0",'end-1c').lower().strip()
+    input_user.delete("1.0",END)
+    #data=input_user.get().lower().strip()
+    #input_user.delete("0",END)
+    if(data in ["bye","exit","close"]):
+        message.insert("end", "Wall-E : How can i help you?\n") 
+        message.see("end")
+        GUI.destroy()
+        
+    elif(data==""):
+        message.config(state=NORMAL)
+        message.insert("end", "Wall-E : How can i help you?\n") 
+        message.see("end")
+    elif(data.strip().lower()=="Get requirements in Qtest".lower()):
+        message.config(state=NORMAL)
+        message.insert("end", "Wall-E : Please fill details in the generated window\n") 
+        input_user.config(state=DISABLED)
+        message.see("end")
+        Qtest_details = Tk()
+        Qtest_details.geometry("350x150")
+        Label(Qtest_details,text="Bearer Token").place(x=10,y=10)
+        bearer_entry=Entry(Qtest_details,width=40)
+        bearer_entry.insert(0,"771a9e45-4db7-44b9-a96e-822ab06a4445")
+        bearer_entry.place(x=100,y=10)
+        Label(Qtest_details,text="Project ID").place(x=10,y=40)
+        project_entry=Entry(Qtest_details,width=40)
+        project_entry.insert(0,"390")
+        project_entry.place(x=100,y=40)
+        Button(Qtest_details,text="Upload",command=but_get_req).place(x=120,y=80)
+        Button(Qtest_details,text="Cancel",command=cancel).place(x=200,y=80)
+        #Label(Qtest_details,text="bearer token",width=30).pack()
+        
+        Qtest_details.mainloop()
+    elif(data.strip().lower()=="Create ec2 instance".lower()):
+        message.config(state=NORMAL)
+        message.insert("end", "Wall-E : Please wait while we create an ec2 instance for you\n")
+        message.see("end")
+        message.config(state=DISABLED)
+        input_user.config(state=DISABLED)
+        os.system('C:\\Users\\kodanda.udumula\\Desktop\\babu.bat')
+        message.config(state=NORMAL)
+        message.insert("end", "Wall-E : Ec2 Instance has been successfully created.\n")
+        message.config(state=DISABLED)
+        input_user.config(state=NORMAL)
+        
+    else:
+        out_response=response_bot(data)
+        message.config(state=NORMAL)
+        message.insert("end", "User : "+data+"\n") 
+        #message.tag_add("blue")
+        message.insert("end", "Wall-E : "+out_response+"\n",)
+        #message.tag_remove("blue")
+        message.see("end")
+        message.config(state=DISABLED)
+        #print(out_response)
+def enter(event):
+    print_user_typed()
+
+GUI=Tk() 
+GUI.title("Wall-E") 
+GUI.geometry("600x470")
+#GUI.state("zoomed")
+bg_image = PhotoImage(file="C:\\Users\\kodanda.udumula\\Desktop\\ML\\wall-e.gif")
+left_frame=Frame(GUI)
+background_label = Label(left_frame, image=bg_image)
+background_label.pack()
+left_frame.pack(side=LEFT)
+input_value=StringVar() 
+scrollbar = Scrollbar(GUI) 
+scrollbar.pack(side=RIGHT, fill=Y) 
+label1=Label(GUI,text="Welcome",fg="Blue") 
+label1.pack(side=TOP,fill=X) 
+message=Text(GUI) 
+message.pack()  
+message.config(state=DISABLED,yscrollcommand=scrollbar.set) 
+scrollbar.config(command=message.yview) 
+#input_user=Entry(GUI)
+input_user = Text(GUI,width=30,height=5)
+#input_user.focus_set() 
+user_label=Label(GUI,text="Enter message here:",fg="Green") 
+user_label.pack(fill=X) 
+input_user.pack(fill=X) 
+input_user.bind("<Return>", enter) 
+GUI.resizable(False, False) 
+positionRight = int(GUI.winfo_screenwidth()/2 - GUI.winfo_reqwidth()*3/2) 
+positionDown = int(GUI.winfo_screenheight()/2 - GUI.winfo_reqheight()*3/2)  
+#GUI.geometry("+{}+{}".format(positionRight, positionDown)) 
+#w = int(positionRight - GUI.winfo_reqwidth()) 
+#h = int(positionDown - GUI.winfo_reqheight()) 
+GUI.geometry("+{}+{}".format(positionRight, positionDown)) 
+input_user.focus_set()
+GUI.mainloop()
